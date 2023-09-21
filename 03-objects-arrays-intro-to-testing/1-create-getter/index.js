@@ -7,24 +7,20 @@ import { isObject } from "./utils";
  */
 export function createGetter(path) {
   const parsedPath = path.split(".");
+  let index = 0;
 
   const inner = (obj) => {
-    let result = { ...obj };
+    const key = parsedPath[index];
+    const value = obj[key];
 
-    for (const key of parsedPath) {
-      if (!(key in result)) {
-        result = undefined;
-        break;
-      }
-      const value = result[key];
-      if (!isObject(value)) {
-        result = value;
-        break;
-      }
-      result = { ...value };
+    if (value && !isObject(value)) {
+      return value;
     }
-
-    return result;
+    if (!value) {
+      return undefined;
+    }
+    index += 1;
+    return inner(value);
   };
 
   return inner;
