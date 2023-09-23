@@ -6,9 +6,9 @@
  */
 export const pick = (obj, ...fields) => {
   const resultObject = {};
-  for (const key of [...fields]) {
-    if (key in obj) {
-      resultObject[key] = obj[key];
+  for (const field of fields) {
+    if (field in obj) {
+      resultObject[field] = obj[field];
     }
   }
   return resultObject;
