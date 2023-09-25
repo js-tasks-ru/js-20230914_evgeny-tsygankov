@@ -14,10 +14,12 @@ export function createGetter(path) {
     const value = obj[key];
 
     if (value && !isObject(value)) {
+      index = 0;
       return value;
     }
     if (!value) {
-      return undefined;
+      index = 0;
+      return;
     }
     index += 1;
     return inner(value);
