@@ -1,7 +1,13 @@
-const CHART_HEIGHT = 50;
+import { getColumnProps } from "../_utils/get-column-props";
+import { CHART_HEIGHT } from "../_constants";
 
 export default class ColumnChart {
-  chartHeight = CHART_HEIGHT;
+  #chartHeight = CHART_HEIGHT;
+  #data;
+  #label;
+  #value;
+  #link;
+
   element;
 
   /**
@@ -9,7 +15,7 @@ export default class ColumnChart {
    *  data: number[];
    *  label: string;
    *  value: number;
-   * 	formatHeading?: (value: number) => string;
+   * 	formatHeading?: (value: string) => string;
    * }} props
    */
   constructor(props = {}) {
@@ -21,47 +27,44 @@ export default class ColumnChart {
       formatHeading = (value) => value,
     } = props;
 
-    this.data = data;
-    this.value = value;
-    this.label = label;
-    this.link = link;
+    this.#data = data;
+    this.#label = label;
+    this.#value = value;
+    this.#link = link;
     this.formatHeading = formatHeading;
 
     this.render();
   }
 
-  /**
-   * @returns {Array<{ percent: string; value: string }>}
-   */
-  getColumnProps() {
-    const data = this.data;
-    const chartHeigh = this.chartHeight;
-
-    const maxValue = Math.max(...data);
-    const scale = chartHeigh / maxValue;
-
-    return data.map((item) => {
-      return {
-        percent: ((item / maxValue) * 100).toFixed(0) + "%",
-        value: String(Math.floor(item * scale)),
-      };
-    });
+  get chartHeight() {
+    return this.#chartHeight;
+  }
+  get label() {
+    return this.#label;
   }
 
+  /**
+   * @returns {string}
+   */
   createLinkTempalate() {
-    const link = this.link;
+    const link = this.#link;
     return link
       ? `<a href="${link}" class="column-chart__link">View all</a>`
       : "";
   }
-
-  setHeaderContent() {
-    return this.formatHeading(this.value);
+  /**
+   * @returns {string}
+   */
+  setChartHeaderContent() {
+    return this.formatHeading(this.#value);
   }
-
+  /**
+   * @returns {string | null}
+   */
   creteChartTemplate() {
-    if (this.data.length) {
-      const columansData = this.getColumnProps(this.data, this.chartHeight);
+    const data = this.#data;
+    if (data.length) {
+      const columansData = getColumnProps(data, this.#chartHeight);
       return columansData
         .map(
           ({ value, percent }) =>
@@ -69,53 +72,69 @@ export default class ColumnChart {
         )
         .join("");
     }
+    return null;
   }
 
-  createTemplate() {
+  createTitleTemplate() {
     return `
-			<div class="column-chart" style="--chart-height: ${this.chartHeight}">
-				<div class="column-chart__title">
-					${this.label}
+			<div class="column-chart__title">
+					${this.#label}
 					${this.createLinkTempalate()}
-				</div>
-				<div class="column-chart__container">
-				<div data-element="header" class="column-chart__header">${this.setHeaderContent()}</div>
+			</div>
+		`;
+  }
 
-					<div data-element="body" class="column-chart__chart">
-						${this.creteChartTemplate()}
-					</div>
+  createCharConnetTemplate() {
+    return `
+			<div data-element="header" class="column-chart__header">${this.setChartHeaderContent()}</div>
+				<div data-element="body" class="column-chart__chart">
+					${this.creteChartTemplate()}					
 				</div>
 			</div>
 		`;
   }
 
+  createTemplate() {
+    return `
+			<div class="column-chart" style="--chart-height: ${this.chartHeight}">
+				${this.createTitleTemplate()}
+				<div class="column-chart__container">
+					${this.createCharConnetTemplate()}
+			</div>
+		`;
+  }
+  /**
+   * @returns {void}
+   */
   render() {
     const element = document.createElement("div");
     element.innerHTML = this.createTemplate();
 
-    const firstElementChild = element.firstElementChild;
+    const { firstElementChild } = element;
 
-    if (!this.data.length) {
+    if (!this.#data.length) {
       firstElementChild.classList.add("column-chart_loading");
     }
-
     this.element = firstElementChild;
   }
-
   /**
-   * @param {string[]} updatedDate
+   * @param {number[]} updatedDate
    * @returns {void}
    */
   update(updatedDate) {
-    this.data = updatedDate;
+    this.#data = updatedDate;
     this.element.innerHTML = this.creteChartTemplate();
   }
-
+  /**
+   * @returns {void}
+   */
   remove() {
     const element = this.element;
     element && element.remove();
   }
-
+  /**
+   * @returns {void}
+   */
   destroy() {
     this.remove();
     this.element = null;
